@@ -84,3 +84,37 @@ export interface CategoryDistribution {
   border: string;
   range: string;
 }
+
+export interface NotebookPredictionPoint {
+  testDay: number;
+  date: string;
+  actual: number;
+  persistence: number;
+  randomForest: number;
+  ridge: number;
+  lstm: number;
+  stubbleSeason: boolean;
+  rfError: number;
+  lstmError: number;
+}
+
+export interface NotebookModelMetric {
+  model: string;
+  type: string;
+  rmse: number;
+  mae: number;
+  r2: number;
+  rank: string;
+  color: string;
+  notes: string;
+}
+
+export interface NotebookAblationPoint {
+  group: string;
+  description: string;
+  rmse: number;
+  mae: number;
+  r2: number;
+  isBest: boolean;
+  impact: string;
+}

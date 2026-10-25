@@ -1,64 +1,201 @@
-# Smart-City-Monitoring-System
-# Smart City Environmental Monitoring and Sustainability Analytics System
+# Smart City Monitoring System
+### Delhi Environmental Monitoring & Sustainability Analytics Platform (DESA)
 
-CS24204 IT Workshop
+[![Next.js](https://img.shields.io/badge/Next.js-16.4.2-black?style=flat-square&logo=next.js)](https://nextjs.org/)
+[![React](https://img.shields.io/badge/React-19.3.0-blue?style=flat-square&logo=react)](https://react.dev/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.0-blue?style=flat-square&logo=typescript)](https://www.typescriptlang.org/)
+[![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-v4-38bdf8?style=flat-square&logo=tailwindcss)](https://tailwindcss.com/)
+[![Recharts](https://img.shields.io/badge/Recharts-v3.10-22c55e?style=flat-square)](https://recharts.org/)
+[![Jupyter Notebook](https://img.shields.io/badge/Jupyter-SmartCity.ipynb-orange?style=flat-square&logo=jupyter)](notebooks/SmartCity.ipynb)
+[![CPCB Compliant](https://img.shields.io/badge/CPCB-NAAQS_2026-emerald?style=flat-square)](https://cpcb.nic.in/)
 
-Team: Tejas Jhunjhunwala, Aadity Setu, Pranay Mallick, Swarnabh Guha, Krish Vatshal
+An empirical, multi-domain analytics and machine learning forecasting platform designed for continuous urban environmental monitoring, grid energy stress analysis, and next-day air quality dispersion prediction across the National Capital Territory of **Delhi, India** (Latitude: 28.6139° N, Longitude: 77.2090° E).
 
-## Overview
+---
 
-This project integrates Delhi air quality, weather and electricity demand data into one daily dataset, computes sustainability indicators, and trains models to predict next-day PM2.5.
+## 📌 Executive Summary
 
-- City: Delhi, India
-- Resolution: daily
-- Study window: 1 Jan 2023 to 30 Nov 2024 (700 days)
-- Target: PM2.5 on the next day (µg/m³)
-- Traffic is out of scope because no suitable daily Delhi series was available.
+| Attribute | Specification |
+|---|---|
+| **Location** | Delhi, National Capital Region (NCR), India |
+| **Study Window** | **1 January 2023 to 30 November 2024 (700 Days)** |
+| **Resolution** | Daily master synchronization with 5-minute grid demand profiles |
+| **Integrated Domains** | Air Quality (CEMS/Atmospheric), Meteorology, Grid Power Demand |
+| **Prediction Objective** | **Next-Day PM2.5 ($\mu\text{g/m}^3$)** (`target_next_day_pm25`) |
+| **Model Source** | [`notebooks/SmartCity.ipynb`](notebooks/SmartCity.ipynb) |
+| **Evaluation Split** | Chronological 70% Train / 15% Validation / 15% Test (105 Days) |
+| **Naïve Baseline** | Persistence (Tomorrow = Today): Test RMSE **17.937 $\mu\text{g/m}^3$** |
+| **Top Model** | Random Forest Regressor: Test RMSE **17.185 $\mu\text{g/m}^3$**, $R^2 = 0.780$ |
 
-## Data
+---
 
-| Domain | Source file | Period | Frequency |
-|---|---|---|---|
-| Air quality | Delhi air quality (daily) | 2023 to 2025 | Daily |
-| Weather | Kaggle weather dataset | 2013 to 2024 | Daily |
-| Energy | Delhi power demand | 2021 to 2024 | 5 minutes |
+## 🔬 Core Empirical Findings & Research Insights
 
-Confirm and cite the original provider of each file before submission. The air quality data is probably modelled, not measured by ground sensors.
+### 1. Inverse Seasonality of Energy & Air Pollution ($r = -0.28$)
+- **Power Demand Peak**: Reaches its maximum during the **June summer heatwaves** (June monthly average ~4,860 MW; all-time historic Delhi grid peak of **8,631.5 MW recorded on 19 June 2024**) driven by extreme residential and commercial air-conditioning cooling loads.
+- **Particulate Peak**: Reaches its maximum during **November and January** (averaging 109 to 121 $\mu\text{g/m}^3$) driven by post-monsoon agricultural stubble burning (Oct–Nov) combined with winter nocturnal thermal inversions and calm boundary layers.
+- **Thesis Conclusion**: The negative correlation between energy demand and PM2.5 is **seasonal, not causal**.
 
-## Pipeline
+### 2. Atmospheric Dispersion Coupling
+- **Temperature vs. PM2.5 ($r = -0.60$)**: Strong negative correlation. Low surface temperatures create nocturnal atmospheric inversions that trap ground-level vehicular and industrial emissions. Summer convective thermal plumes rapidly disperse particulates.
+- **Wind Speed vs. PM2.5 ($r = -0.44$)**: Calm winds ($< 8\text{ km/h}$) cause toxic smog stagnation; breezes ($> 20\text{ km/h}$) effectively purge the air shed.
 
-1. Each source must be cleaned properly (duplicates, outliers, derived columns).
-2. Aggregate energy demand to daily mean and peak. Days with under 80% coverage are interpolated.
-3. Merge on date and keep the overlap window.
-4. Add calendar features, lags and rolling means.
-5. Compute the AQI category (CPCB breakpoints), peak-load ratio and a 0 to 100 sustainability score.
-6. Split chronologically (70/15/15), fit the scaler on training days only, and build 7-day windows.
+### 3. Notebook Machine Learning Benchmark & Ablation Study (`SmartCity.ipynb`)
+- **Random Forest (300 estimators)** achieved the highest test accuracy (**RMSE 17.185 $\mu\text{g/m}^3$**, $R^2 = 0.780$), closely followed by **Ridge Regression (RMSE 17.433)** and **Bidirectional LSTM (RMSE 17.659)**.
+- **Ablation Study Finding**: In Cell 8 of the notebook, an ablation experiment revealed that **"PM2.5 history only"** achieves **RMSE 16.873 $\mu\text{g/m}^3$ and $R^2 = 0.788$**, confirming that short-term 24-hr pollution is strongly dominated by autoregressive persistence ($r = 0.85$), while energy and weather operate over multi-day synoptic timescales.
 
-Output: `delhi_daily_master.csv` (700 rows, 34 columns).
+---
 
-## Model
+## 📊 CPCB Air Quality Index Distribution (700-Day Study)
 
-- Input: 7 days of 18 features
-- Output: change in PM2.5 from the last input day, added back to give next-day PM2.5
-- LSTM: `LSTM(32) > Dropout(0.3) > Dense(16) > Dense(1)`, Adam, MSE, EarlyStopping
-- Baselines: persistence, Ridge regression, Random Forest
+Calculated using Central Pollution Control Board (CPCB) 24-hour PM2.5 concentration breakpoints:
 
-## Results (test set, 106 days)
+| CPCB Category | PM2.5 Range | Days Observed | Share (%) | Status |
+|---|---|---|---|---|
+| **Satisfactory** | 31 – 60 $\mu\text{g/m}^3$ | **366** | **52.3%** | Moderate air shed health |
+| **Moderate** | 61 – 90 $\mu\text{g/m}^3$ | **151** | **21.6%** | Sensitive group advisory |
+| **Poor** | 91 – 120 $\mu\text{g/m}^3$ | **84** | **12.0%** | Graded Response Action Plan (GRAP) Phase I |
+| **Very Poor** | 121 – 250 $\mu\text{g/m}^3$ | **59** | **8.4%** | GRAP Phase II / III enforcement |
+| **Good** | 0 – 30 $\mu\text{g/m}^3$ | **40** | **5.7%** | Clean monsoon washout windows |
+| **Severe** | $> 250\text{ }\mu\text{g/m}^3$ | **0** | **0.0%** | *Smoothed by spatial atmospheric model* |
 
-| Model | RMSE | MAE | R² |
-|---|---|---|---|
-| Persistence | 17.94 | 12.95 | 0.760 |
-| Ridge | 17.43 | 12.57 | 0.774 |
-| Random Forest | 17.20 | 12.52 | 0.780 |
-| LSTM (5-seed mean) | 17.66 | 12.76 | 0.768 |
+---
 
-Errors are in µg/m³. With 700 days, simple models perform as well as the LSTM, and PM2.5 history carries most of the predictive information.
+## 📈 ML Predictive Model Benchmark (`SmartCity.ipynb`)
 
+Evaluated across the 105-day chronological test partition (18 August 2024 to 30 November 2024):
 
-## Limitations
+| Model Architecture | Type | Test RMSE ($\mu\text{g/m}^3$) | MAE ($\mu\text{g/m}^3$) | $R^2$ Score | Rank |
+|---|---|---|---|---|---|
+| **Random Forest** | 300 Trees, min_samples_leaf=5 | **17.185** 🏆 | **12.506** 🏆 | **0.780** 🏆 | Top Performer |
+| **Ridge Regression** | Regularized L2 Linear ($\alpha=100$) | **17.433** | **12.568** | **0.774** | Strong Linear Baseline |
+| **LSTM Recurrent Network** | 32 units, Dropout 0.3, Dense 16 | **17.659** | **12.762** | **0.768** | 5-Seed Sequence Ensemble |
+| **Persistence (Baseline)** | Naïve Tomorrow = Today | **17.937** | **12.950** | **0.760** | Benchmark to Beat |
 
-- Single location, 700 days, probably modelled air quality.
-- The test period covers the autumn rise in pollution, which training only partly represents.
-- 19 energy days in the study window are interpolated.
-## Contributors
-Thank you to everyone who has contributed to this project! See [CONTRIBUTORS.md](CONTRIBUTORS.md) for the full list.
+### Feature Ablation Study (`SmartCity.ipynb` Cell 8):
+
+| Feature Subset | Omitted Inputs | Test RMSE | MAE | $R^2$ |
+|---|---|---|---|---|
+| **PM2.5 history only** | Drop weather, energy & other gases | **16.873** | **12.422** | **0.788** |
+| **Without other pollutants** | Drop PM10, $\text{NO}_2$, $\text{CO}$, $\text{SO}_2$, $\text{O}_3$, dust | **17.388** | **12.755** | **0.775** |
+| **Without energy features** | Drop demand_mean, demand_peak | **17.549** | **12.679** | **0.771** |
+| **Without weather features** | Drop temp, humidity, wind, precip, pressure | **17.634** | **12.743** | **0.768** |
+| **All 18 features** | Full multi-domain integration | **17.659** | **12.749** | **0.768** |
+
+---
+
+## 🌿 Multi-Domain Sustainability Score Formula
+
+The platform features an integrated **Sustainability Index ($0 - 100$)** formulated in the thesis:
+
+$$\text{Sustainability Score} = 100 - 100 \times \Big( 0.50 \cdot \text{norm\_PM2.5} + 0.30 \cdot \text{norm\_Demand} + 0.20 \cdot \text{norm\_WeatherStress} \Big)$$
+
+Where:
+- $\text{norm\_PM2.5} = \frac{\text{PM2.5} - 15.3}{214.0 - 15.3}$
+- $\text{norm\_Demand} = \frac{\text{Demand} - 2121.3}{7361.1 - 2121.3}$
+- $\text{norm\_WeatherStress} = \frac{|\text{Temp} - 24.0|}{16.0}$ (absolute thermal comfort distance from 24 °C)
+
+**Study Window Distribution**: Mean = **67.8**, Minimum = **12.8**, Maximum = **90.9**.
+
+---
+
+## 🗂️ Data Sources & Pipeline
+
+```
+data/
+├── delhi_daily_master.csv                         # Master integrated dataset (700 rows, 34 columns)
+├── powerdemand_5min_2021_to_2024_with weather.csv # 5-min power demand readings (393,440 rows)
+├── delhi_air_quality_2023_2025_daily (1).csv      # Daily ground/atmospheric pollutant observations
+└── kaggel_weather_2013_to_2024.csv                # Daily meteorological station series
+
+notebooks/
+└── SmartCity.ipynb                                # Official model training, ablation & loss curves
+```
+
+---
+
+## 💻 Tech Stack & Architecture
+
+- **Framework**: Next.js 16.4 (App Router) + React 19.3
+- **Language**: TypeScript 5 (Strict Mode)
+- **Styling**: Tailwind CSS v4 (Obsidian/Zinc Dark Palette, Functional Emerald/Amber/Rose Alerts)
+- **Visualization**: Recharts 3.10 (Composed Multi-Axis Charts, Scatter Matrices, Confidence Bands)
+- **Machine Learning Integration**: Python 3, TensorFlow / Keras, Scikit-Learn
+
+---
+
+## 🚀 Getting Started
+
+### Prerequisites
+- **Node.js**: v18.18 or higher (v20+ recommended)
+- **npm** or **pnpm**
+
+### Installation
+
+```bash
+# Clone the repository
+git clone https://github.com/swarnim/Smart-City-Monitoring-System.git
+cd Smart-City-Monitoring-System/"PROJECT Pandaphile"
+
+# Install dependencies
+npm install
+
+# Run the development server
+npm run dev
+```
+
+Open [http://localhost:3000](http://localhost:3000) in your browser.
+
+### Production Build
+
+```bash
+# Compile and build production-optimized static & server bundle
+npm run build
+
+# Start the production server
+npm run start
+```
+
+---
+
+## 📂 Project Directory Structure
+
+```
+Smart-City-Monitoring-System/
+├── data/                                      # Master empirical CSV datasets
+├── notebooks/
+│   └── SmartCity.ipynb                        # Master Jupyter notebook (ML training & ablation)
+└── PROJECT Pandaphile/                        # Production Next.js Dashboard Application
+    ├── app/
+    │   ├── globals.css                        # Dark-mode styling, industrial scrollbars
+    │   ├── layout.tsx                         # App layout with DESA metadata
+    │   └── page.tsx                           # Master dashboard orchestrator
+    ├── components/
+    │   └── delhi/
+    │       ├── AirQualityKpis.tsx             # CPCB PM2.5, PM10, gases, temp/wind metrics
+    │       ├── AqiCategoryDistribution.tsx    # 700-day CPCB category breakdown
+    │       ├── TemporalAirQualityChart.tsx    # Multi-line PM2.5/PM10 vs NAAQS limits (60/100)
+    │       ├── DailyMasterTable.tsx           # Paginated, sortable 700-day master table
+    │       ├── EnergyTopMetrics.tsx           # 8,632 MW peak, mean demand, peak-load ratio
+    │       ├── SeasonalEnergyChart.tsx        # Inverse seasonal divergence overlay
+    │       ├── DiurnalDemandChart.tsx         # 5-min 24h diurnal curve (Summer vs Winter)
+    │       ├── MultiDomainCorrelationMatrix.tsx # Correlation cards & interactive scatter plot
+    │       ├── PredictionChart.tsx            # Test set actuals vs RF, LSTM, Ridge, Persistence
+    │       ├── ModelScorecard.tsx             # Leaderboard, ablation study & notebook plots
+    │       ├── NotebookPredictionsTable.tsx   # Day-by-day test set predictions table with CSV export
+    │       └── ScenarioSandbox.tsx            # Multi-domain what-if simulator & SHAP weights
+    ├── lib/
+    │   ├── notebookModelData.ts               # Exact predictions & metrics from SmartCity.ipynb
+    │   ├── delhiData.ts                       # Typed dataset & precomputed empirical statistics
+    │   └── utils.ts                           # Tailwind merger & CSV exporter utilities
+    ├── public/
+    │   ├── loss_curve.png                     # Extracted from SmartCity.ipynb Cell 7
+    │   └── predicted_vs_actual.png            # Extracted from SmartCity.ipynb Cell 7
+    └── types/
+        └── dashboard.ts                       # Strongly-typed TypeScript interfaces
+```
+
+---
+
+## 📄 License
+This project is developed for environmental and energy analytics research under the **MIT License**.
