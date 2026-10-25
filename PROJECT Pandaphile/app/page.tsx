@@ -13,11 +13,12 @@ import DiurnalDemandChart from '@/components/delhi/DiurnalDemandChart';
 import MultiDomainCorrelationMatrix from '@/components/delhi/MultiDomainCorrelationMatrix';
 import PredictionChart from '@/components/delhi/PredictionChart';
 import ModelScorecard from '@/components/delhi/ModelScorecard';
+import NotebookPredictionsTable from '@/components/delhi/NotebookPredictionsTable';
 import ScenarioSandbox from '@/components/delhi/ScenarioSandbox';
 
 import { TabView, TimeScope, DelhiDailyRecord } from '@/types/dashboard';
 import { DELHI_DAILY_MASTER, DELHI_METADATA } from '@/lib/delhiData';
-import { Calendar, ShieldCheck, Activity, MapPin, Database } from 'lucide-react';
+import { Calendar, ShieldCheck, Activity, MapPin, Database, Award } from 'lucide-react';
 
 export default function DelhiAnalyticsDashboard() {
   const [currentTab, setCurrentTab] = useState<TabView>('air-quality');
@@ -26,16 +27,16 @@ export default function DelhiAnalyticsDashboard() {
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState<boolean>(false);
   const [selectedCategory, setSelectedCategory] = useState<string>('ALL');
 
-  // ML model selection state
+  // ML model selection state (matching SmartCity.ipynb models)
   const [selectedModels, setSelectedModels] = useState({
+    randomForest: true,
     lstm: true,
-    xgboost: true,
-    randomForest: false,
+    ridge: true,
     persistence: true,
   });
-  const [showCI, setShowCI] = useState<boolean>(true);
+  const [showErrorBars, setShowErrorBars] = useState<boolean>(false);
 
-  const toggleModel = (modelKey: 'lstm' | 'xgboost' | 'randomForest' | 'persistence') => {
+  const toggleModel = (modelKey: 'randomForest' | 'lstm' | 'ridge' | 'persistence') => {
     setSelectedModels(prev => ({ ...prev, [modelKey]: !prev[modelKey] }));
   };
 
@@ -105,19 +106,19 @@ export default function DelhiAnalyticsDashboard() {
                   <span>•</span>
                   <span>Filtered View: {filteredRecords.length} Days</span>
                   <span>•</span>
-                  <span>All-Time Peak: 8,632 MW</span>
+                  <span>Top Model: Random Forest (RMSE 17.18)</span>
                 </div>
               </div>
             </div>
 
             <div className="flex items-center gap-3 self-end sm:self-center text-xs font-mono">
               <span className="text-zinc-400 flex items-center gap-1.5">
-                <Activity className="w-3.5 h-3.5 text-cyan-400" />
-                <span>Target: Next-Day PM2.5</span>
+                <Award className="w-3.5 h-3.5 text-blue-400" />
+                <span>SmartCity.ipynb Connected</span>
               </span>
               <span className="h-4 w-px bg-zinc-800" />
-              <span className="text-emerald-400 font-semibold">
-                RMSE: 14.8 µg/m³
+              <span className="text-blue-400 font-semibold">
+                Test RMSE: 17.185
               </span>
             </div>
           </div>
@@ -167,16 +168,19 @@ export default function DelhiAnalyticsDashboard() {
           {/* VIEW 3: NEXT-DAY ML FORECASTING & SUSTAINABILITY ANALYTICS */}
           {currentTab === 'ml-prediction' && (
             <div className="space-y-6 animate-fadeIn">
-              {/* Test Set Prediction vs Ground Truth */}
+              {/* Test Set Prediction vs Ground Truth (SmartCity.ipynb) */}
               <PredictionChart
                 selectedModels={selectedModels}
                 onToggleModel={toggleModel}
-                showCI={showCI}
-                onToggleCI={() => setShowCI(!showCI)}
+                showErrorBars={showErrorBars}
+                onToggleErrorBars={() => setShowErrorBars(!showErrorBars)}
               />
 
-              {/* Comparative Model Scorecard */}
+              {/* Comparative Model Scorecard & Ablation Study */}
               <ModelScorecard />
+
+              {/* Test Set Day-by-Day Predictions Table */}
+              <NotebookPredictionsTable />
 
               {/* What-If Simulator & 18 Feature Importance */}
               <ScenarioSandbox />
