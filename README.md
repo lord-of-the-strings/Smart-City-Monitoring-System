@@ -135,7 +135,7 @@ notebooks/
 ```bash
 # Clone the repository
 git clone https://github.com/swarnim/Smart-City-Monitoring-System.git
-cd Smart-City-Monitoring-System/"PROJECT Pandaphile"
+cd Smart-City-Monitoring-System/project-pandaphile
 
 # Install dependencies
 npm install
@@ -165,7 +165,7 @@ Smart-City-Monitoring-System/
 ├── data/                                      # Master empirical CSV datasets
 ├── notebooks/
 │   └── SmartCity.ipynb                        # Master Jupyter notebook (ML training & ablation)
-└── PROJECT Pandaphile/                        # Production Next.js Dashboard Application
+└── project-pandaphile/                        # Production Next.js Dashboard Application
     ├── app/
     │   ├── globals.css                        # Dark-mode styling, industrial scrollbars
     │   ├── layout.tsx                         # App layout with DESA metadata

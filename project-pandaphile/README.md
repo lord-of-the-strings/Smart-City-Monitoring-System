@@ -134,7 +134,7 @@ notebook/
 
 ```bash
 # Navigate to project directory
-cd "PROJECT Pandaphile"
+cd project-pandaphile
 
 # Install dependencies
 npm install
@@ -160,7 +160,7 @@ npm run start
 ## 📂 Project Directory Structure
 
 ```
-PROJECT Pandaphile/
+project-pandaphile/
 ├── app/
 │   ├── globals.css                        # Dark-mode styling, industrial scrollbars
 │   ├── layout.tsx                         # App layout with DESA metadata
